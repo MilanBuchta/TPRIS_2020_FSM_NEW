@@ -8,7 +8,7 @@
 #include <GateControl.h>
 
 //***************************************************************************
-const etl::array<GateControl::transition, 6> GateControl::transitionTable = {
+const etl::array<GateControl::transition, 8> GateControl::transitionTable = {
 		GateControl::transition(
 				States::IDLE,   //Current state
 				Events::CMD_OPEN, // Event
@@ -34,15 +34,27 @@ const etl::array<GateControl::transition, 6> GateControl::transitionTable = {
 				&GateControl::OnTranToIdle,
 				&GateControl::Guard),
 		GateControl::transition(
+						States::CLOSE,   //Current state
+						Events::CMD_OPEN, // Event
+						States::OPEN,  // New state
+						&GateControl::OnTranToOpen,
+						&GateControl::Guard),
+		GateControl::transition(
+						States::OPEN,   //Current state
+						Events::CMD_CLOSE, // Event
+						States::CLOSE,  // New state
+						&GateControl::OnTranToClose,
+						&GateControl::Guard),
+		GateControl::transition(
 				Events::INIT, // Event
 				States::CLOSE,  // New state
 				&GateControl::OnTranToClose,
-				&GateControl::Guard),
+				&GateControl::GuardS1NotS2),
 		GateControl::transition(
 				Events::INIT, // Event
 				States::IDLE,  // New state
 				&GateControl::OnTranToIdle,
-				&GateControl::NotGuard)
+				&GateControl::GuardS1AndS2)
 		 };
 //***************************************************************************
 

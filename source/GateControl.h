@@ -96,12 +96,25 @@ public:
 		PRINTF("%s\n",__func__);
 		return !guard;
 	}
+
+	bool GuardS1AndS2() {
+		PRINTF("%s\n",__func__);
+		return S1 || S2;
+	}
+
+	bool GuardS1NotS2() {
+		PRINTF("%s\n",__func__);
+		return !S1 && !S2;
+	}
+
 //***********************************
 	void Null() {
 //		std::cout << "Action: Null\n";
 	}
 	bool guard;
-	static const etl::array<GateControl::transition, 6> transitionTable;
+	bool S1;
+	bool S2;
+	static const etl::array<GateControl::transition, 8> transitionTable;
 	static const etl::array<GateControl::state, 3> stateTable;
 };
 #endif /* GATECONTROL_H_ */

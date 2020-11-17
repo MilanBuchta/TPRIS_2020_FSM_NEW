@@ -83,11 +83,12 @@ int main(void) {
 	gateControl.guard = true;
 	gateControl.process_event(Events::INIT);
 
-	gateControl.process_event(Events::S1);
+
 
 	while (1) {
 		if (newChar_flag) {
 			newChar_flag = false;
+
 			switch (newChar) {
 			case 'c':
 				gateControl.process_event(Events::CMD_CLOSE);
