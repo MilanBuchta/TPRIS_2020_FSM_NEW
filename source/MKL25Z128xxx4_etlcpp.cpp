@@ -41,9 +41,15 @@
 #include <peripherals.h>
 #include <pin_mux.h>
 #include "fsl_lpsci.h"
+#include "fsl_pit.h"
+#include "fsl_port.h"
+#include "fsl_gpio.h"
 
 volatile bool newChar_flag = false;
 volatile char newChar;
+volatile bool eventTimeout = false;
+
+#define SECONDS  50000000U //50S
 
 extern "C" void UART0_IRQHandler(void) {
 
@@ -51,6 +57,12 @@ extern "C" void UART0_IRQHandler(void) {
 		newChar_flag = true;
 		newChar = LPSCI_ReadByte(UART0);
 	}
+}
+
+extern "C" void PIT_IRQHandler() {
+	PIT_ClearStatusFlags(PIT, kPIT_Chnl_0, kPIT_TimerFlag);
+	PIT_StopTimer(PIT, kPIT_Chnl_0);
+	eventTimeout = true;
 }
 
 /* TODO: insert other definitions and declarations here. */
@@ -78,6 +90,14 @@ int main(void) {
 	LPSCI_EnableInterrupts(UART0, kLPSCI_RxDataRegFullInterruptEnable);
 	EnableIRQ(UART0_IRQn);
 
+	pit_config_t pitConfig;
+	PIT_GetDefaultConfig(&pitConfig);
+	PIT_Init(PIT, &pitConfig);
+	PIT_SetTimerPeriod(PIT, kPIT_Chnl_0,
+				USEC_TO_COUNT(SECONDS, CLOCK_GetBusClkFreq()));
+	PIT_EnableInterrupts(PIT, kPIT_Chnl_0, kPIT_TimerInterruptEnable);
+	EnableIRQ(PIT_IRQn);
+
 	PRINTF("Etlcpp FSM\n");
 	gateControl.start(false);
 	gateControl.guard = true;
@@ -102,9 +122,16 @@ int main(void) {
 			case '2':
 				gateControl.process_event(Events::S2);
 				break;
+			case 'e':
+				gateControl.process_event(Events::CMD_ENERGENCY);
+				break;
 			}
 		}
 
+		if(eventTimeout == true) {
+			eventTimeout = false;
+			gateControl.process_event(Events::TIME_OUT);
+		}
 	}
 
 	return 0;

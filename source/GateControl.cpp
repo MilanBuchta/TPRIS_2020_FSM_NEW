@@ -7,8 +7,10 @@
 
 #include <GateControl.h>
 
+
+
 //***************************************************************************
-const etl::array<GateControl::transition, 8> GateControl::transitionTable = {
+const etl::array<GateControl::transition, 11> GateControl::transitionTable = {
 		GateControl::transition(
 				States::IDLE,   //Current state
 				Events::CMD_OPEN, // Event
@@ -54,11 +56,28 @@ const etl::array<GateControl::transition, 8> GateControl::transitionTable = {
 				Events::INIT, // Event
 				States::IDLE,  // New state
 				&GateControl::OnTranToIdle,
-				&GateControl::GuardS1AndS2)
+				&GateControl::GuardS1AndS2),
+		GateControl::transition(
+				Events::CMD_ENERGENCY, // Event
+				States::EMERGENCY,  // New state
+				&GateControl::OnTranToEmergency,
+				nullptr),
+		GateControl::transition(
+				States::OPEN,   //Current state
+				Events::TIME_OUT, // Event
+				States::ERROR,  // New state
+				&GateControl::OnTranToError,
+				&GateControl::Guard),
+		GateControl::transition(
+				States::CLOSE,   //Current state
+				Events::TIME_OUT, // Event
+				States::ERROR,  // New state
+				&GateControl::OnTranToError,
+				&GateControl::Guard),
 		 };
 //***************************************************************************
 
-const etl::array<GateControl::state, 3> GateControl::stateTable = {
+const etl::array<GateControl::state, 5> GateControl::stateTable = {
 		GateControl::state(
 				States::IDLE,
 				&GateControl::OnEnterIdle,
@@ -71,4 +90,11 @@ const etl::array<GateControl::state, 3> GateControl::stateTable = {
 		,GateControl::state(States::CLOSE,
 				&GateControl::OnEnterClose,
 				&GateControl::OnExitClose)
+
+		,GateControl::state(States::EMERGENCY,
+				&GateControl::OnEnterEmergency,
+				&GateControl::OnExitEmergency)
+		,GateControl::state(States::ERROR,
+				&GateControl::OnEnterError,
+				&GateControl::OnExitError)
 };

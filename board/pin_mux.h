@@ -28,6 +28,20 @@ void BOARD_InitBootPins(void);
 #define SOPT5_UART0RXSRC_UART_RX 0x00u /*!<@brief UART0 receive data source select: UART0_RX pin */
 #define SOPT5_UART0TXSRC_UART_TX 0x00u /*!<@brief UART0 transmit data source select: UART0_TX pin */
 
+/*! @name PORTD1 (number 74), LED_BLUE
+  @{ */
+
+/* Symbols to be used with GPIO driver */
+#define BOARD_INITPINS_LED_BLUE_FGPIO FGPIOD             /*!<@brief FGPIO peripheral base pointer */
+#define BOARD_INITPINS_LED_BLUE_GPIO GPIOD               /*!<@brief GPIO peripheral base pointer */
+#define BOARD_INITPINS_LED_BLUE_GPIO_PIN_MASK (1U << 1U) /*!<@brief GPIO pin mask */
+
+/* Symbols to be used with PORT driver */
+#define BOARD_INITPINS_LED_BLUE_PORT PORTD               /*!<@brief PORT peripheral base pointer */
+#define BOARD_INITPINS_LED_BLUE_PIN 1U                   /*!<@brief PORT pin number */
+#define BOARD_INITPINS_LED_BLUE_PIN_MASK (1U << 1U)      /*!<@brief PORT pin mask */
+                                                         /* @} */
+
 /*!
  * @brief Configures pin routing and optionally pin electrical features.
  *

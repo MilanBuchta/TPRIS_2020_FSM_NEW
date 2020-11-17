@@ -10,32 +10,34 @@
 #include <fsl_debug_console.h>
 #include "etl/state_chart.h"
 #include "etl/array.h"
-
+#include "fsl_pit.h"
+#include "pin_mux.h"
+#include "fsl_gpio.h"
 #include <stdio.h>
 
 struct Events {
 	enum {
-		S1, S2, CMD_CLOSE, CMD_OPEN, TIME_OUT, INIT
+		S1, S2, CMD_CLOSE, CMD_OPEN, TIME_OUT, INIT,CMD_ENERGENCY
 	};
 };
-
-const char *const EventName[] = { "S1", "S2", "CMD_CLOSE", "CMD_OPEN",
-		"TIME_OUT", "INIT" };
 
 //***************************************************************************
 // States
 //***************************************************************************
 struct States {
 	enum {
-		CLOSE, OPEN, IDLE, ERROR
+		CLOSE, OPEN, IDLE, ERROR,EMERGENCY
 	};
 };
 
-const char *const StateName[] = { "CLOSE", "OPEN", "IDLE", "ERROR" };
 
 //***********************************
 // The Gate control FSM.
 //***********************************
+
+#define LED_OFF() GPIO_SetPinsOutput(BOARD_INITPINS_LED_BLUE_GPIO, BOARD_INITPINS_LED_BLUE_GPIO_PIN_MASK)
+#define LED_ON() GPIO_ClearPinsOutput(BOARD_INITPINS_LED_BLUE_GPIO, BOARD_INITPINS_LED_BLUE_GPIO_PIN_MASK)
+
 class GateControl: public etl::state_chart<GateControl> {
 public:
 	GateControl() :
@@ -65,26 +67,35 @@ public:
 //***********************************
 	void OnEnterIdle() {
 		PRINTF("%s\n",__func__);
+
+			LED_ON();
+
 	}
 //***********************************
 	void OnExitIdle() {
 		PRINTF("%s\n",__func__);
+		LED_OFF();
+
 	}
 //**********************************
 	void OnEnterOpen() {
 		PRINTF("%s\n",__func__);
+		PIT_StartTimer(PIT, kPIT_Chnl_0);
 	}
 //**********************************
 	void OnExitOpen() {
 		PRINTF("%s\n",__func__);
+		PIT_StopTimer(PIT, kPIT_Chnl_0);
 	}
 //***********************************
 	void OnEnterClose() {
 		PRINTF("%s\n",__func__);
+		PIT_StartTimer(PIT, kPIT_Chnl_0);
 	}
 //***********************************
 	void OnExitClose() {
 		PRINTF("%s\n",__func__);
+		PIT_StopTimer(PIT, kPIT_Chnl_0);
 	}
 //***********************************
 	bool Guard() {
@@ -107,14 +118,43 @@ public:
 		return !S1 && !S2;
 	}
 
+	void OnEnterEmergency() {
+		PRINTF("%s\n",__func__);
+	}
+
+	void OnExitEmergency() {
+		PRINTF("%s\n",__func__);
+	}
+
+	void OnTranToEmergency() {
+		PRINTF("%s\n",__func__);
+	}
+
+	void OnEnterError() {
+		PRINTF("%s\n",__func__);
+
+	}
+
+	void OnExitError() {
+		PRINTF("%s\n",__func__);
+	}
+
+	void delay_pit(uint32_t t) {
+		volatile uint32_t i = 0;
+		for (i = 0; i < 150000 * t; ++i) { //200000 -> 200ms // 20Mhz clozk
+			__asm("NOP");
+			/* delay */
+		}
+	}
+
 //***********************************
 	void Null() {
 //		std::cout << "Action: Null\n";
 	}
 	bool guard;
-	bool S1;
-	bool S2;
-	static const etl::array<GateControl::transition, 8> transitionTable;
-	static const etl::array<GateControl::state, 3> stateTable;
+	bool S1 = false;
+	bool S2 = false;
+	static const etl::array<GateControl::transition,11> transitionTable;
+	static const etl::array<GateControl::state, 5> stateTable;
 };
 #endif /* GATECONTROL_H_ */

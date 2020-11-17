@@ -12,12 +12,15 @@ processor: MKL25Z128xxx4
 package_id: MKL25Z128VLK4
 mcu_data: ksdk2_0
 processor_version: 8.0.1
+pin_labels:
+- {pin_num: '74', pin_signal: ADC0_SE5b/PTD1/SPI0_SCK/TPM0_CH1, label: LED_BLUE, identifier: LED_BLUE}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 /* clang-format on */
 
 #include "fsl_common.h"
 #include "fsl_port.h"
+#include "fsl_gpio.h"
 #include "pin_mux.h"
 
 /* FUNCTION ************************************************************************************************************
@@ -39,6 +42,7 @@ BOARD_InitPins:
 - pin_list:
   - {pin_num: '27', peripheral: UART0, signal: RX, pin_signal: TSI0_CH2/PTA1/UART0_RX/TPM2_CH0, pull_enable: enable}
   - {pin_num: '28', peripheral: UART0, signal: TX, pin_signal: TSI0_CH3/PTA2/UART0_TX/TPM2_CH1, pull_enable: enable}
+  - {pin_num: '74', peripheral: GPIOD, signal: 'GPIO, 1', pin_signal: ADC0_SE5b/PTD1/SPI0_SCK/TPM0_CH1, direction: OUTPUT, gpio_init_state: 'true'}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 /* clang-format on */
@@ -53,6 +57,15 @@ void BOARD_InitPins(void)
 {
     /* Port A Clock Gate Control: Clock enabled */
     CLOCK_EnableClock(kCLOCK_PortA);
+    /* Port D Clock Gate Control: Clock enabled */
+    CLOCK_EnableClock(kCLOCK_PortD);
+
+    gpio_pin_config_t LED_BLUE_config = {
+        .pinDirection = kGPIO_DigitalOutput,
+        .outputLogic = 1U
+    };
+    /* Initialize GPIO functionality on pin PTD1 (pin 74)  */
+    GPIO_PinInit(BOARD_INITPINS_LED_BLUE_GPIO, BOARD_INITPINS_LED_BLUE_PIN, &LED_BLUE_config);
 
     const port_pin_config_t porta1_pin27_config = {/* Internal pull-up resistor is enabled */
                                                    kPORT_PullUp,
@@ -79,6 +92,9 @@ void BOARD_InitPins(void)
                                                    kPORT_MuxAlt2};
     /* PORTA2 (pin 28) is configured as UART0_TX */
     PORT_SetPinConfig(PORTA, 2U, &porta2_pin28_config);
+
+    /* PORTD1 (pin 74) is configured as PTD1 */
+    PORT_SetPinMux(BOARD_INITPINS_LED_BLUE_PORT, BOARD_INITPINS_LED_BLUE_PIN, kPORT_MuxAsGpio);
 
     SIM->SOPT5 = ((SIM->SOPT5 &
                    /* Mask bits to zero which are setting */
